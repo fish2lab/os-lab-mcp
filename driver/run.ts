@@ -85,7 +85,12 @@ const opts = parseArgs(process.argv.slice(2), params.target);
 mkdirSync(opts.out, { recursive: true });
 const started = new Date();
 const transcriptFile = join(opts.out, "transcript.log");
-writeFileSync(transcriptFile, "");
+// task0 要跑三次并对比三次 tool_call，所以 task0 的 transcript 追加；其它任务每次覆盖。
+if (opts.task === "task0") {
+  appendFileSync(transcriptFile, JSON.stringify({ ts: new Date().toISOString(), kind: "note", note: "run-start", task: opts.task }) + "\n");
+} else {
+  writeFileSync(transcriptFile, "");
+}
 function log(entry: Record<string, unknown>): void {
   appendFileSync(transcriptFile, JSON.stringify({ ts: new Date().toISOString(), ...entry, task: opts.task }) + "\n");
 }
