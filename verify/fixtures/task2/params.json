@@ -1,0 +1,10 @@
+{
+  "user": "student",
+  "salt": "0badcafe",
+  "root": "/home/student/os-lab",
+  "target": "/home/student/os-lab/0badcafe.txt",
+  "decoy": "/home/student/os-lab-secret/flag.txt",
+  "port": 20001,
+  "teePort": 20002,
+  "os": "macos"
+}

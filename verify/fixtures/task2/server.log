@@ -1,0 +1,5 @@
+2026-09-19T10:00:01.100Z pid=41003 ppid=41002 event=start transport=stdio
+2026-09-19T10:00:03.200Z pid=41003 event=tools/call id=3 name=read_file path=/home/student/os-lab/0badcafe.txt
+2026-09-19T10:00:03.201Z pid=41003 event=ok path=/home/student/os-lab/0badcafe.txt bytes=23
+2026-09-19T10:00:05.000Z pid=41003 event=stdin-end
+2026-09-19T10:00:05.001Z pid=41003 event=exit

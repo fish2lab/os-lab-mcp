@@ -1,0 +1,4 @@
+{"ts":"2026-09-19T10:00:03.100Z","kind":"model","task":"task2","responseId":"chatcmpl-fixture-1","model":"deepseek-v4-flash","stopReason":"toolUse","text":"","toolCalls":[{"id":"call_1","name":"read_file","arguments":{"path":"/home/student/os-lab/0badcafe.txt"}}],"usage":{"input":120,"output":18,"total":138,"costUsd":0.0000217},"ms":1400}
+{"ts":"2026-09-19T10:00:03.220Z","kind":"tool","task":"task2","name":"read_file","arguments":{"path":"/home/student/os-lab/0badcafe.txt"},"ok":true,"bytes":23,"ms":30}
+{"ts":"2026-09-19T10:00:04.600Z","kind":"model","task":"task2","responseId":"chatcmpl-fixture-2","model":"deepseek-v4-flash","stopReason":"stop","text":"os-lab student 0badcafe","toolCalls":[],"usage":{"input":160,"output":12,"total":172,"costUsd":0.0000258},"ms":1300}
+{"kind":"summary","rounds":2,"costUsd":0.0000475,"wallMs":8000,"modelMs":2700}

@@ -1,0 +1,4 @@
+  PID  PPID COMMAND
+41001 40990 node --experimental-strip-types driver/run.ts --mode stdio --no-pause
+41002 41001 node --experimental-strip-types tee/stdio-tee.ts --out runs/macos/task2 -- node server/fs-server.ts --transport stdio
+41003 41002 node --experimental-strip-types server/fs-server.ts --transport stdio
