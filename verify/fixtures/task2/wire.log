@@ -1,0 +1,7 @@
+{"ts":"2026-09-19T10:00:01.200Z","dir":"c2s","json":{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"os-lab-driver","version":"0.1.0"}}}}
+{"ts":"2026-09-19T10:00:01.250Z","dir":"s2c","json":{"jsonrpc":"2.0","id":0,"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"fs-server","version":"0.1.0"}}}}
+{"ts":"2026-09-19T10:00:01.260Z","dir":"c2s","json":{"jsonrpc":"2.0","method":"notifications/initialized"}}
+{"ts":"2026-09-19T10:00:01.300Z","dir":"c2s","json":{"jsonrpc":"2.0","id":1,"method":"tools/list"}}
+{"ts":"2026-09-19T10:00:01.320Z","dir":"s2c","json":{"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"read_file","description":"读取文件文本","inputSchema":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}},{"name":"list_dir","description":"列出目录","inputSchema":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}]}}}
+{"ts":"2026-09-19T10:00:03.190Z","dir":"c2s","json":{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"read_file","arguments":{"path":"/home/student/os-lab/0badcafe.txt"}}}}
+{"ts":"2026-09-19T10:00:03.210Z","dir":"s2c","json":{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"os-lab student 0badcafe\n"}]}}}
