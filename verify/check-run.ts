@@ -419,7 +419,7 @@ function checkTask4Stdio(c: Checker, os: "macos" | "linux"): void {
   }
 }
 
-/** task4-http：Server 与 driver 无父子关系，driver 死后 Server 还在；server.log 在本任务期间没有新行。 */
+/** task4-http：Server 与 driver 无父子关系，driver 死后 Server 还在；本任务期间 server.log 只有 tools/call，没有生命周期事件。 */
 function checkTask4Http(c: Checker): void {
   const pids = loadPids(c);
   const ak = c.lines("after-kill.txt");
@@ -434,12 +434,19 @@ function checkTask4Http(c: Checker): void {
   const meta = c.json("meta.json");
   const started = meta?.started ? Date.parse(meta.started) : NaN;
   if (!c.assert(!!slog && !Number.isNaN(started), "能读到 server.log 与 meta.started 用于比较", { file: slog ? logName : "meta.json", line: slog ? 1 : 0 })) return;
-  let newest = 0;
+  // 本任务期间 Server 应服务了一次 tools/call，且从 driver 挂起到观测结束之间没有 stdin-end / exit：
+  // http 下 Server 与 driver 没有连接层面的生命周期耦合，driver 死了它感知不到。
+  const ended = meta?.ended ? Date.parse(meta.ended) : Date.now();
+  let served = 0;
+  let lifecycle = 0;
   slog!.forEach((l, i) => {
     const ts = Date.parse(l.slice(0, l.indexOf(" ")));
-    if (!Number.isNaN(ts) && ts >= started) newest = newest || i + 1;
+    if (Number.isNaN(ts) || ts < started || ts > ended) return;
+    if (l.includes("event=tools/call")) served = served || i + 1;
+    if (/event=(stdin-end|exit)\b/.test(l)) lifecycle = lifecycle || i + 1;
   });
-  c.assert(newest === 0, "server.log 在 task4-http 开始后没有新增行（Server 没有感知到 driver 退出）", { file: logName, line: newest || slog!.length });
+  c.assert(served > 0, "server.log 里有本任务期间的 tools/call（Server 确实服务了这次请求）", { file: logName, line: served || slog!.length });
+  c.assert(lifecycle === 0, "driver 退出到观测结束之间 server.log 没有 stdin-end / exit（Server 没有感知到 driver 退出）", { file: logName, line: lifecycle || slog!.length });
 }
 
 function checkTask5(c: Checker, os: "macos" | "linux", p: Params, variant: "naive" | "fixed" | "sandbox"): void {

@@ -19,7 +19,8 @@ mkdir -p "$DIR"
 : > "$DIR/raw.eslogger"
 
 # 独立会话里启动 eslogger，原始输出直接落盘（raw.* 已在 .gitignore，里面含环境变量，不要提交）。
-sudo setsid eslogger fork exec open exit > "$DIR/raw.eslogger" 2> "$DIR/eslogger.err" &
+# macOS 没有 setsid 命令，用 perl 的 POSIX::setsid 起独立会话
+sudo perl -e 'use POSIX qw(setsid); setsid(); exec @ARGV or die "exec eslogger 失败: $!"' -- eslogger fork exec open exit > "$DIR/raw.eslogger" 2> "$DIR/eslogger.err" &
 ESLOGGER_JOB=$!
 sleep 1
 if ! sudo pgrep -x eslogger > /dev/null; then
