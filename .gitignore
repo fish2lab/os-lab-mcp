@@ -1,0 +1,5 @@
+node_modules/
+.env
+runs/**/raw.*
+.claude/worktrees/
+.DS_Store

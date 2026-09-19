@@ -1,0 +1,27 @@
+{
+  "name": "os-lab-mcp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "《操作系统接口技术》验证实验：Agent 经 MCP 访问 OS 资源",
+  "engines": { "node": ">=22.6" },
+  "scripts": {
+    "doctor": "node --experimental-strip-types verify/doctor.ts",
+    "task0": "node --experimental-strip-types driver/run.ts --mode stdio --task task0 --no-pause",
+    "observe": "node --experimental-strip-types observe/observe.ts",
+    "tee:http": "node --experimental-strip-types tee/http-tee.ts",
+    "check": "node --experimental-strip-types verify/check-run.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "0.85.1",
+    "@earendil-works/pi-ai": "0.85.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@sinclair/typebox": "^0.34.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
