@@ -1,6 +1,24 @@
-# 任务 2：MCP stdio，Server 是子进程，介质是 socket 对，open 发生在子进程
+# 任务 2：先写 tee/stdio-tee.ts，再跑 MCP stdio，看到 Server 是子进程、介质是 socket 对、open 发生在子进程
 
-目标：看到驱动程序拉起 tee、tee 拉起 Server 的两次 exec，看到 Server 的 fd 0、1 是 unix socket。
+目标：看到驱动程序拉起 tee、tee 拉起 Server 的两次 exec，看到 Server 的 fd 0、1 是 unix socket。介质由 tee 建立，tee 由你写。
+
+## 第 1 步是补全 tee/stdio-tee.ts，它在驱动程序与 Server 之间转发并记录每一行
+
+骨架已给：参数解析（`--out DIR -- cmd args...`）、写 wire.log 的 `record(dir, line)`、用 `spawn` 启动 Server（stdin、stdout 为 pipe，stderr 继承）、启动后写 `DIR/pids.tee.json`。要补的地方标了 TODO，按编号：
+
+- TODO 1：客户端 → Server。逐行读自己的 stdin，每行先 `record("c2s", line)`，再写到子进程 stdin（补回换行）。
+- TODO 2：自己的 stdin 结束时只 `child.stdin.end()`，不 kill。
+- TODO 3：Server → 客户端。逐行读子进程 stdout，每行先 `record("s2c", line)`，再写到自己的 stdout。
+- TODO 4：子进程退出后以同一退出码退出；要等 stdout 读完再退，否则最后几行会丢。
+
+`tee/http-tee.ts` 是成品，请求体与响应体各记一行的写法可以参照。验收：
+
+    npm run typecheck
+    npm run check task2
+
+`check task2` 要跑完下面第 2 步才有文件可查。写完先一个 commit，message 写 stdio-tee。
+
+## 第 2 步：在观测器下跑
 
 命令（需要 sudo）：
 
