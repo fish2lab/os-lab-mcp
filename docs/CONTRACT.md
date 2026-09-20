@@ -104,3 +104,44 @@ CLI：`node observe/observe.ts <local|stdio|http|server-http> [driver 的其余�
 - C：`node --experimental-strip-types observe/observe.ts local --dry`（无 sudo 时脚本应明确报错「需要 sudo」而不是静默）；shell 脚本 `bash -n` 通过；过滤函数用 `observe/fixtures/raw.eslogger.sample` 做单测（自备 3 条样例）。
 - D：`node --experimental-strip-types verify/salt.ts fish2lab` 打印参数；`npm run check task2` 对 `verify/fixtures/task2/` 样例全 PASS。
 - E：`tasks/` 下九个目录各有 README.md，命令与本文一致；README.md 快速开始 6 步。
+
+## 8. 第二版（2026-09-20）：成品换骨架，学生写代码
+
+动机：第一版学生只写 5 行 realpath，其余是跑命令填表；改成「学生写、检查器验收、报告只叙述」。以下覆盖前文冲突处。
+
+### 8.1 学生要写的四个文件（其余目录仍受保护）
+
+| 文件 | 给的骨架 | 学生补的 | 验收 |
+|---|---|---|---|
+| `server/fs-server.ts` | 命令行解析、日志函数 `logLine`、http 传输分支（SDK 无会话 transport 的样板）、启动流程 | tools/list 与 tools/call 处理函数（read_file、list_dir、run_command）、`allowed()` 校验与 deny 日志、errno 记录、stdio 分支的 stdin 结束处理（默认退出、`--no-exit-on-eof` 保活） | `npm run check server` |
+| `tee/stdio-tee.ts` | 参数解析、`record()` 写 wire.log、pids.tee.json | spawn Server、两个方向的逐行转发、stdin 结束只关 Server 的 stdin、Server 退出后同码退出 | `npm run check task2` |
+| `server/check.ts` | naive 前缀比较 | realpath 后比较 | `npm run check task5-fixed` |
+| `observe/os-lab.sb`（macOS）/ `observe/bwrap-args.txt`（Linux） | 文件头与 `(allow default)` | 一条拒绝读诱饵目录的规则 / 一个盖住诱饵目录的挂载参数 | `npm run check task5-sandbox` |
+
+`tee/http-tee.ts` 保留成品，作为 stdio-tee 的参照。`bridge/`、`driver/`、`observe/*.ts`、`verify/` 仍是成品。
+
+### 8.2 任务表（十个）
+
+| 任务 | 命令 | 学生写 | check |
+|---|---|---|---|
+| task0 | `npm run task0` ×3（local 模式，不需要 Server） | 无 | task0 |
+| task1 | `npm run observe -- local` | 无 | task1 |
+| server | 写 fs-server.ts；`npm run check server` 用 stdin 灌 JSON-RPC 验收 | fs-server.ts | server |
+| task2 | 写 stdio-tee.ts；`npm run observe -- stdio` | stdio-tee.ts | task2 |
+| task3 | `npm run observe -- server-http` + `npm run tee:http` + `npm run observe -- http` | 无（http 分支已给） | task3 |
+| task4-stdio | `npm run observe -- stdio --hang`，再 `--no-exit-on-eof` 对照 | 无 | task4-stdio |
+| task4-http | `npm run observe -- http --hang` | 无 | task4-http |
+| task5-naive | `npm run observe -- stdio --task task5-naive --path "$HOME/os-lab/../os-lab-secret/flag.txt"` | 无 | task5-naive |
+| task5-fixed | 改 check.ts 并 commit；同上 `--task task5-fixed` | check.ts | task5-fixed |
+| task5-sandbox | 写沙箱规则；`--task task5-sandbox` | os-lab.sb / bwrap-args.txt | task5-sandbox |
+| task6-shell | 给服务器加 run_command；`npm run observe -- stdio --task task6-shell` | run_command 工具 | task6-shell |
+
+`run_command {cmd: string, mode: "shell" | "direct"}`：shell 用 `execFileSync("/bin/sh", ["-c", cmd])`，direct 把 cmd 按空白切开后 `execFileSync(argv[0], argv.slice(1))`；返回 stdout 文本；日志行 `event=run_command mode=<mode> cmd=<cmd>`。driver 在 task6-shell 下的指令：用 run_command 以 shell 和 direct 各运行一次 `ls -l <root>`，最后回答两次输出是否相同；temperature 0。
+
+`npm run check server`（verify/check-server.ts）：以 stdio 启动学生的服务器，依次发 initialize、notifications/initialized、tools/list、read_file(target)、read_file(/etc/hosts)、list_dir(root)、run_command(shell echo hi)、run_command(direct echo hi)，再关 stdin；断言：tools/list 含三个工具；target 返回内容正确；/etc/hosts 返回 error 且 message 以「不允许读取」开头；list_dir 含 `<salt>.txt`；两次 run_command 都返回 `hi`；关 stdin 后 2 秒内退出码 0；server.log 有 start（含 ppid）、tools/call、deny、ok、stdin-end、exit 各至少一行。再用 `--no-exit-on-eof` 启动一次：关 stdin 后 2 秒仍存活且日志有 stdin-end。
+
+check task6-shell：transcript 有两条 run_command 工具调用且 mode 分别为 shell、direct；events.log 里 server 的后代有 exec 且 args[0] 以 `sh` 结尾并含 `-c`；exec 事件里 args[0] 以 `ls` 结尾的至少 2 条；fork 事件（父为 server）至少 2 条；所有 exec 事件的 env 已删。
+
+### 8.3 评分（100）
+
+做出来 40：十一项 check 各通过得分（server 8、task2 6、task5-fixed 4、task5-sandbox 4、task6-shell 6、其余六项各 2）。叙述 30：报告每个任务一段不超过 150 字，说清自己日志里哪一行是证据、为什么能证明；不填表。预测 10：任务 2 前提交 PREDICTION.md 四项，事后逐项写差异原因。口试 20：现场就自己的 runs/ 回答问题。
