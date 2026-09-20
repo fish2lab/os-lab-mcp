@@ -1,14 +1,14 @@
 # 任务 0：跑三次 npm run task0，看模型输出什么、宿主替它做什么
 
-目标：看清模型只输出工具名与路径参数，读文件由 Server 进程完成。
+目标：看清模型只输出工具名与路径参数，读文件由驱动程序进程内的工具函数完成。此时 Server 还没写，用 local 模式。
 
 命令（跑三次，每次结束后比较终端里的 tool_call 参数）：
 
     npm run task0
 
-它把指令「读取 ~/os-lab/<salt>.txt 并原样返回其内容」发给模型，经 stdio 传输拉起 Server，终端分三色打印 tool_call JSON（黄）、桥翻译出的 JSON-RPC（青）、Server 返回内容（绿），末尾打印 token 数与费用。不经观测器，不需要 sudo。
+它把指令「读取 ~/os-lab/<salt>.txt 并原样返回其内容」发给模型，驱动程序在本进程执行 read_file，终端打印 tool_call JSON（黄）与工具返回内容（绿），末尾打印 token 数与费用。不经观测器，不需要 sudo。
 
-产物：`runs/<os>/task0/transcript.log`（三次运行的 model、tool、summary 记录）、`meta.json`、`wire.log`。
+产物：`runs/<os>/task0/transcript.log`（三次运行的 model、tool、summary 记录）、`meta.json`。
 
 验证点（`npm run check task0` 会查）：
 

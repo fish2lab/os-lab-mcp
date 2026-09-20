@@ -15,4 +15,4 @@
 - wire.log 的 s2c 响应是 JSON-RPC error，message 含「不允许读取」。
 - events.log 没有诱饵文件的 open 事件。
 
-交的东西：check.ts 修复一个 commit，`runs/<os>/task5-fixed/` 整个目录另一个 commit，message 写 task5-fixed。报告里贴 `git show <commit> -- server/check.ts` 的 diff。
+交的东西：check.ts 修复一个 commit，`runs/<os>/task5-fixed/` 整个目录另一个 commit，message 写 task5-fixed。`npm run check task5-fixed` 是 check.ts 的验收。报告里贴 `git show <commit> -- server/check.ts` 的 diff。
