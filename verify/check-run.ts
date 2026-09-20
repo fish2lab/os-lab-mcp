@@ -9,6 +9,7 @@
 //
 // 目录里的 meta.json 决定 events.log 的格式：macos 是 eslogger 的 JSONL，linux 是 strace 文本行。
 // 目录里若有 params.json（fixtures 用），就用它代替仓库根的 .os-lab.json，这样样例不依赖个人参数。
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { loadParams, osName, repoRoot, type Params } from "./params.ts";
@@ -17,7 +18,7 @@ import { loadParams, osName, repoRoot, type Params } from "./params.ts";
 
 const TASKS = [
   "task0", "task1", "task2", "task3", "task4-stdio", "task4-http",
-  "task5-naive", "task5-fixed", "task5-sandbox",
+  "task5-naive", "task5-fixed", "task5-sandbox", "task6-shell", "server",
 ] as const;
 type Task = (typeof TASKS)[number];
 
@@ -477,8 +478,42 @@ function checkTask5(c: Checker, os: "macos" | "linux", p: Params, variant: "naiv
 
 // ---------- 入口 ----------
 
+/** task6-shell：同一条命令走 shell 与 direct，Server 之下的进程树不同。 */
+function checkTask6(c: Checker, os: "macos" | "linux"): void {
+  const pids = loadPids(c);
+  const tr = c.lines("transcript.log") ?? [];
+  const calls: { mode?: string; line: number }[] = [];
+  tr.forEach((l, i) => {
+    try {
+      const j = JSON.parse(l);
+      if (j.kind === "tool" && j.name === "run_command") calls.push({ mode: j.arguments?.mode, line: i + 1 });
+    } catch { /* 跳过 */ }
+  });
+  const shellCall = calls.find((x) => x.mode === "shell");
+  const directCall = calls.find((x) => x.mode === "direct");
+  c.assert(!!shellCall, "transcript.log 有 mode=shell 的 run_command 调用", { file: "transcript.log", line: shellCall?.line ?? 0 });
+  c.assert(!!directCall, "transcript.log 有 mode=direct 的 run_command 调用", { file: "transcript.log", line: directCall?.line ?? 0 });
+
+  const evs = loadEvents(c, os);
+  if (!c.assert(!!evs, "events.log 存在", { file: "events.log", line: evs ? 1 : 0 })) return;
+  const base = (a?: string[]) => (a && a.length ? a[0]!.split("/").pop() ?? "" : "");
+  const shExec = evs!.find((e) => e.kind === "exec" && /^(ba|z|da)?sh$/.test(base(e.argv)) && (e.argv ?? []).includes("-c"));
+  const lsExecs = evs!.filter((e) => e.kind === "exec" && base(e.argv) === "ls");
+  const forks = evs!.filter((e) => e.kind === "fork" && (pids.server ? e.pid === pids.server : true));
+  c.assert(!!shExec, "events.log 有 argv 为 sh -c 的 exec（shell 模式多一层 shell）", { file: "events.log", line: shExec?.line ?? 0 });
+  c.assert(lsExecs.length >= 2, `exec 到 ls 的事件至少 2 条（实际 ${lsExecs.length}）`, { file: "events.log", line: lsExecs[1]?.line ?? lsExecs[0]?.line ?? 0 });
+  c.assert(forks.length >= 2, `server 发出的 fork 至少 2 次（实际 ${forks.length}）`, { file: "events.log", line: forks[1]?.line ?? forks[0]?.line ?? 0 });
+  const envLine = findLine(c.lines("events.log"), /"env"\s*:/);
+  c.assert(envLine === 0, "events.log 里 exec 事件的 env 已删", { file: "events.log", line: envLine || 1 });
+}
+
 function main(): void {
   const { task, dir } = parseArgs(process.argv.slice(2));
+  if (task === "server") {
+    // 服务器本身的验收在 verify/check-server.ts，这里只转发。
+    const r = spawnSync(process.execPath, ["--experimental-strip-types", join(repoRoot(), "verify", "check-server.ts")], { stdio: "inherit" });
+    process.exit(r.status ?? 1);
+  }
   const c = new Checker(dir);
   console.log(`检查 ${task}：${dir}`);
   if (!existsSync(dir)) {
@@ -498,6 +533,7 @@ function main(): void {
     case "task5-naive": checkTask5(c, os, p, "naive"); break;
     case "task5-fixed": checkTask5(c, os, p, "fixed"); break;
     case "task5-sandbox": checkTask5(c, os, p, "sandbox"); break;
+    case "task6-shell": checkTask6(c, os); break;
   }
   process.exit(c.summary());
 }

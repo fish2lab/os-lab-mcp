@@ -95,9 +95,15 @@ function log(entry: Record<string, unknown>): void {
   appendFileSync(transcriptFile, JSON.stringify({ ts: new Date().toISOString(), ...entry, task: opts.task }) + "\n");
 }
 
-const SYSTEM_PROMPT = "你有工具可以读文件。用户要求读某个路径时，直接调用工具，path 参数必须与用户给出的字符串完全一致，不要展开、规范化或改写。工具返回后，把内容原样复述。";
-const instruction = `读取 ${opts.path} 并原样返回其内容`;
-const isTask5 = opts.task.startsWith("task5");
+const isTask6 = opts.task === "task6-shell";
+const SYSTEM_PROMPT = isTask6
+  ? "你有一个 run_command 工具可以运行命令。用户要求时，按用户给的 cmd 与 mode 逐次调用，不要改写命令，不要合并调用。"
+  : "你有工具可以读文件。用户要求读某个路径时，直接调用工具，path 参数必须与用户给出的字符串完全一致，不要展开、规范化或改写。工具返回后，把内容原样复述。";
+// 任务 6：同一条命令走 shell 与 direct 两条路，比较 Server 之下的进程树。
+const instruction = isTask6
+  ? `用 run_command 工具运行命令「ls -l ${loadParams().root}」两次：第一次 mode 为 shell，第二次 mode 为 direct，两次都要真的调用工具。最后回答两次输出是否相同。`
+  : `读取 ${opts.path} 并原样返回其内容`;
+const isTask5 = opts.task.startsWith("task5") || isTask6;
 
 // ---------- 工具来源：local 在本进程；stdio/http 经 MCP ----------
 type Tool = AgentTool<TSchema, McpToolDetails>;
@@ -252,7 +258,10 @@ try {
         printToolCall(toolCall.name, args);
         toolStart.set(toolCall.id, Date.now());
         // task5：模型把路径改写了就不让它执行，重发一次；实验要看 Server 对原始路径的反应。
-        if (isTask5 && (toolCall.name !== "read_file" || (args as { path?: string }).path !== opts.path)) {
+        const expectedCmd = `ls -l ${loadParams().root}`;
+        const badTask6 = isTask6 && (toolCall.name !== "run_command" || (args as { cmd?: string }).cmd !== expectedCmd);
+        const badTask5 = !isTask6 && isTask5 && (toolCall.name !== "read_file" || (args as { path?: string }).path !== opts.path);
+        if (badTask5 || badTask6) {
           pathRewritten = true;
           return { block: true, reason: "path 与要求不一致", terminate: true };
         }

@@ -7,7 +7,7 @@
   "engines": { "node": ">=22.6" },
   "scripts": {
     "doctor": "node --experimental-strip-types verify/doctor.ts",
-    "task0": "node --experimental-strip-types driver/run.ts --mode stdio --task task0 --no-pause",
+    "task0": "node --experimental-strip-types driver/run.ts --mode local --task task0",
     "observe": "node --experimental-strip-types observe/observe.ts",
     "tee:http": "node --experimental-strip-types tee/http-tee.ts",
     "check": "node --experimental-strip-types verify/check-run.ts",

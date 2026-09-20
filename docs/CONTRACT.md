@@ -138,10 +138,10 @@ CLI：`node observe/observe.ts <local|stdio|http|server-http> [driver 的其余�
 
 `run_command {cmd: string, mode: "shell" | "direct"}`：shell 用 `execFileSync("/bin/sh", ["-c", cmd])`，direct 把 cmd 按空白切开后 `execFileSync(argv[0], argv.slice(1))`；返回 stdout 文本；日志行 `event=run_command mode=<mode> cmd=<cmd>`。driver 在 task6-shell 下的指令：用 run_command 以 shell 和 direct 各运行一次 `ls -l <root>`，最后回答两次输出是否相同；temperature 0。
 
-`npm run check server`（verify/check-server.ts）：以 stdio 启动学生的服务器，依次发 initialize、notifications/initialized、tools/list、read_file(target)、read_file(/etc/hosts)、list_dir(root)、run_command(shell echo hi)、run_command(direct echo hi)，再关 stdin；断言：tools/list 含三个工具；target 返回内容正确；/etc/hosts 返回 error 且 message 以「不允许读取」开头；list_dir 含 `<salt>.txt`；两次 run_command 都返回 `hi`；关 stdin 后 2 秒内退出码 0；server.log 有 start（含 ppid）、tools/call、deny、ok、stdin-end、exit 各至少一行。再用 `--no-exit-on-eof` 启动一次：关 stdin 后 2 秒仍存活且日志有 stdin-end。
+`npm run check server`（verify/check-server.ts）：以 stdio 启动学生的服务器，依次发 initialize、notifications/initialized、tools/list、read_file(target)、read_file(/etc/hosts)、list_dir(root/，naive 前缀检查要求带尾斜杠)、run_command(shell echo hi)、run_command(direct echo hi)，再关 stdin；断言：tools/list 含三个工具；target 返回内容正确；/etc/hosts 返回 error 且 message 以「不允许读取」开头；list_dir 含 `<salt>.txt`；两次 run_command 都返回 `hi`；关 stdin 后 2 秒内退出码 0；server.log 有 start（含 ppid）、tools/call、deny、ok、stdin-end、exit 各至少一行。再用 `--no-exit-on-eof` 启动一次：关 stdin 后 2 秒仍存活且日志有 stdin-end。
 
 check task6-shell：transcript 有两条 run_command 工具调用且 mode 分别为 shell、direct；events.log 里 server 的后代有 exec 且 args[0] 以 `sh` 结尾并含 `-c`；exec 事件里 args[0] 以 `ls` 结尾的至少 2 条；fork 事件（父为 server）至少 2 条；所有 exec 事件的 env 已删。
 
 ### 8.3 评分（100）
 
-做出来 40：十一项 check 各通过得分（server 8、task2 6、task5-fixed 4、task5-sandbox 4、task6-shell 6、其余六项各 2）。叙述 30：报告每个任务一段不超过 150 字，说清自己日志里哪一行是证据、为什么能证明；不填表。预测 10：任务 2 前提交 PREDICTION.md 四项，事后逐项写差异原因。口试 20：现场就自己的 runs/ 回答问题。
+做出来 40：十一项 check 各通过得分（server 8、task2 6、task5-fixed 4、task5-sandbox 4、task6-shell 6、其余六项各 2）。叙述 30：报告每个任务一段不超过 150 字，说清自己日志里哪一行是证据、为什么能证明；不填表。预测 10：任务 2 前提交 PREDICTION.md 四项，事后逐项写差异原因。口试 20：现场就自己的 runs/ 回答问题，并从自己写的四个文件里抽一处问为什么这样写。

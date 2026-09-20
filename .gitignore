@@ -3,3 +3,5 @@ node_modules/
 runs/**/raw.*
 .claude/worktrees/
 .DS_Store
+.os-lab.json
+DOCTOR.md
