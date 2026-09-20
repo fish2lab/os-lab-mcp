@@ -4,15 +4,13 @@
 
 ## 骨架给了什么，TODO 要补什么
 
-`server/fs-server.ts` 已给：命令行解析 `parseCli`、日志函数 `logLine`、http 传输分支（SDK 无会话 transport 的样板）、启动流程。要补的地方标了 TODO，按编号：
+`server/fs-server.ts` 已给：命令行解析 `parseCli`、日志函数 `logLine`、`mcpError` / `errnoOf` / `textResult` 三个小工具、tools/list 的工具表（read_file、list_dir、run_command 及 inputSchema）、tools/call 的分发、http 传输分支（SDK 无会话 transport 的样板）、启动流程。要补的地方标了 TODO，按编号：
 
-- TODO 1：tools/list 处理函数，返回 read_file、list_dir、run_command 三个工具及其 inputSchema。
-- TODO 2：tools/call 里的 read_file，`{path}`，返回文件文本。
-- TODO 3：tools/call 里的 list_dir，`{path}`，返回每行一个名字。
-- TODO 4：tools/call 里的 run_command，`{cmd, mode}`。mode 为 shell 时 `execFileSync("/bin/sh", ["-c", cmd])`，为 direct 时把 cmd 按空白切开后 `execFileSync(argv[0], argv.slice(1))`，返回 stdout 文本，日志行 `event=run_command mode=<mode> cmd=<cmd>`。这一项也可以留到任务 6 再写，但 `npm run check server` 要三个工具都在才全部通过。
-- TODO 5：read_file 与 list_dir 调用前过 `allowed(path, root)`，root 取 `loadParams().root`；不通过就写 `event=deny` 日志并抛 `McpError(InvalidParams, "不允许读取 <path>")`。
-- TODO 6：open 失败时写 `event=open-error ... errno=<名>` 日志，把 Node 的 err.message 原样放进错误 message（形如 `open failed: EPERM: ...`）；成功时写 `event=ok path=<path> bytes=<n>`。
-- TODO 7：stdio 分支的 stdin 结束处理。默认 `process.stdin.on("end")` 时写 `event=stdin-end`、`event=exit` 并 `process.exit(0)`；`--no-exit-on-eof` 时仍写 stdin-end 但不退出，用 `setInterval(() => {}, 1000)` 保活。
+- TODO 1：`checkOrDeny(path, root)`。`allowed(path, root)` 不通过就写 `event=deny path=<path>` 日志并抛 `mcpError(InvalidParams, "不允许读取 <path>")`；通过则什么都不做。
+- TODO 2：`readFileTool`。先 checkOrDeny，再 `readFileSync(path, "utf8")`。读失败写 `event=open-error path=<path> errno=<名>` 并抛 `mcpError(InternalError, "open failed: " + err.message)`；成功写 `event=ok path=<path> bytes=<n>`，返回 `textResult(text)`。
+- TODO 3：`listDirTool`。同 read_file，只是用 `readdirSync`，返回的文本是名字按行拼接。
+- TODO 4：`runCommandTool(cmd, mode)`。写 `event=run_command mode=<mode> cmd=<cmd>`；mode 为 shell 时 `execFileSync("/bin/sh", ["-c", cmd])`，为 direct 时把 cmd 按空白切开后 `execFileSync(argv[0], argv.slice(1))`，返回 stdout 文本。不做路径校验。这一项也可以留到任务 6 再写，但 `npm run check server` 要三个工具都能用才全部通过。
+- TODO 5：stdio 分支的 stdin 结束处理。`process.stdin.on("end")` 时写 `event=stdin-end`；默认 `process.exit(0)`（exit 钩子会写 `event=exit`）；`--no-exit-on-eof` 时不退出，用 `setInterval(() => {}, 1000)` 保活。
 
 每行日志的字段以 `docs/CONTRACT.md` §3 为准：start（含 ppid）、tools/call（含 id 与 name）、deny、open-error、ok、stdin-end、exit。检查器按这些行断言。
 

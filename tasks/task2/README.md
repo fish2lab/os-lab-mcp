@@ -4,13 +4,12 @@
 
 ## 第 1 步是补全 tee/stdio-tee.ts，它在驱动程序与 Server 之间转发并记录每一行
 
-骨架已给：参数解析（`--out DIR -- cmd args...`）、写 wire.log 的 `record(dir, line)`、启动后写 `DIR/pids.tee.json`。要补的地方标了 TODO，按编号：
+骨架已给：参数解析（`--out DIR -- cmd args...`）、写 wire.log 的 `record(dir, line)`、用 `spawn` 启动 Server（stdin、stdout 为 pipe，stderr 继承）、启动后写 `DIR/pids.tee.json`。要补的地方标了 TODO，按编号：
 
-- TODO 1：spawn 子进程（Server），stdio 全部 pipe，环境变量原样传下去。
-- TODO 2：自己的 stdin 逐行转发到子进程 stdin，每行先 `record("c2s", line)`。
-- TODO 3：子进程 stdout 逐行转发到自己的 stdout，每行先 `record("s2c", line)`。
-- TODO 4：自己的 stdin 结束时只 `child.stdin.end()`，不 kill。
-- TODO 5：子进程退出后以同一退出码退出。
+- TODO 1：客户端 → Server。逐行读自己的 stdin，每行先 `record("c2s", line)`，再写到子进程 stdin（补回换行）。
+- TODO 2：自己的 stdin 结束时只 `child.stdin.end()`，不 kill。
+- TODO 3：Server → 客户端。逐行读子进程 stdout，每行先 `record("s2c", line)`，再写到自己的 stdout。
+- TODO 4：子进程退出后以同一退出码退出；要等 stdout 读完再退，否则最后几行会丢。
 
 `tee/http-tee.ts` 是成品，请求体与响应体各记一行的写法可以参照。验收：
 
