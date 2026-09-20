@@ -144,4 +144,4 @@ check task6-shell：transcript 有两条 run_command 工具调用且 mode 分别
 
 ### 8.3 评分（100）
 
-做出来 40：十一项 check 各通过得分（server 8、task2 6、task5-fixed 4、task5-sandbox 4、task6-shell 6、其余六项各 2）。叙述 30：报告每个任务一段不超过 150 字，说清自己日志里哪一行是证据、为什么能证明；不填表。预测 10：任务 2 前提交 PREDICTION.md 四项，事后逐项写差异原因。口试 20：现场就自己的 runs/ 回答问题，并从自己写的四个文件里抽一处问为什么这样写。
+做出来 40：十一项 check 各通过得分（server 8、task2 6、task5-fixed 4、task5-sandbox 4、task6-shell 6、其余六项各 2）。task5-fixed 的 4 分还要求 `server/check.ts` 的 `allowed()` 过评分脚本的穿越用例：白名单里的目标文件返回 true；`<root>/../os-lab-secret/flag.txt`、白名单目录里指向诱饵的符号链接、与白名单同前缀的兄弟目录（如 `~/os-lab-evil/x.txt`）、不存在的文件都返回 false。评分脚本用教师本地模板的 verify/ 跑十项 check，个人参数按 GitHub 用户名重新派生，所以 runs/ 里的 salt 与提交者不符时 check 会失败；受保护文件与模板不一致时 `check server` 不跑、总分暂扣待人工核。叙述 30：报告每个任务一段不超过 150 字，说清自己日志里哪一行是证据、为什么能证明；不填表。预测 10：任务 2 前提交 PREDICTION.md 四项，事后逐项写差异原因。口试 20：现场就自己的 runs/ 回答问题，并从自己写的四个文件里抽一处问为什么这样写。

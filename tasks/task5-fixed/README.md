@@ -16,3 +16,5 @@
 - events.log 没有诱饵文件的 open 事件。
 
 交的东西：check.ts 修复一个 commit，`runs/<os>/task5-fixed/` 整个目录另一个 commit，message 写 task5-fixed。`npm run check task5-fixed` 是 check.ts 的验收。报告里贴 `git show <commit> -- server/check.ts` 的 diff。
+
+评分脚本还会单独调用你的 `allowed()`：目标文件要返回 true；`<root>/../os-lab-secret/flag.txt`、白名单目录里指向诱饵文件的符号链接、同前缀的兄弟目录 `~/os-lab-evil/x.txt`、不存在的文件都要返回 false。realpath 版天然满足，前缀比较后补一个分隔符的版本过不了符号链接那条。
